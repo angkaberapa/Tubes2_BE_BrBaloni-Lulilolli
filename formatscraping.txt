@@ -1,0 +1,42 @@
+<table class="list-table col-list icon-hover">
+    <tbody>
+        <tr>
+            <td>	
+----------------ELEMENTPARENT
+            	<span class ="icon-hover">
+		            <span typeof="mw:File">
+		                <a href="ElementImageLink" class="mw-file-description image">
+			                <img src="ElementImageLink" decoding="async" loading="lazy" width="40" height="40" class="mw-file-element ls-is-cached lazyloaded"   data-image-name="ElementName.svg" data-image-key="ElementName.svg" data-relevant="0" data-src="ElementImageLink">
+		                </a>
+		            </span>
+		        </span>
+		        <a href="wiki/ElementName" title = "ElementName">ElementName</a>
+	        </td>
+	        <td>
+    		    <ul>
+		            <li>
+------------------------ELEMENT1
+                		<span class ="icon-hover">
+		    	            <span typeof="mw:File">
+		                        <a href="ElementImageLink" class="mw-file-description image">
+			    	                <img src="ElementImageLink" decoding="async" loading="lazy" width="40" height="40" class="mw-file-element ls-is-cached lazyloaded"   data-image-name="ElementName.svg" data-image-key="ElementName.svg" data-relevant="0" data-src="ElementImageLink">
+		        	            </a>
+		    	            </span>
+			            </span>
+			            <a href="wiki/ElementName" title = "ElementName">ElementName</a>
+			            " + "
+------------------------ELEMENT2
+			            <span class ="icon-hover">
+		    	            <span typeof="mw:File">
+		                        <a href="ElementImageLink" class="mw-file-description image">
+			    	                <img src="ElementImageLink" decoding="async" loading="lazy" width="40" height="40" class="mw-file-element ls-is-cached lazyloaded"   data-image-name="ElementName.svg" data-image-key="ElementName.svg" data-relevant="0" data-src="ElementImageLink">
+		        	            </a>
+		    	            </span>
+			            </span>
+			            <a href="wiki/ElementName" title = "ElementName">ElementName</a>
+		            </li>
+		        </ul>
+	        </td>
+	    </tr>
+    </tbody>
+</table>

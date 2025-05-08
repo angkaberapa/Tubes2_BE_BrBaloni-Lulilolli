@@ -1,0 +1,32 @@
+services:
+  app:
+    extends:
+      file: docker-compose.app.yaml
+      service: app-air
+    container_name: app
+    env_file:
+      - .env.dev
+    ports:
+      - 8080:8080
+    networks:
+      - app_network
+  
+  db:
+    extends:
+      file: docker-compose.core.yaml
+      service: postgres
+    container_name: db
+    env_file:
+      - .env.dev
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      - app_network
+
+volumes:
+  db_data:
+
+networks:
+  app_network:
