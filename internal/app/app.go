@@ -1,12 +1,9 @@
 package app
 
 import (
-	"log"
-
 	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/api"
 	v1 "github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/api/v1"
 	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/core"
-	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/db"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,20 +13,20 @@ import (
 func Run() {
 	cfg := core.NewAppConfig()
 
-	dbPool, err := db.NewPostgresPool(
-		cfg.DBConfig.Address,
-		cfg.DBConfig.MaxConns,
-		cfg.DBConfig.MaxIdleTime,
-	)
+	// dbPool, err := db.NewPostgresPool(
+	// 	cfg.DBConfig.Address,
+	// 	cfg.DBConfig.MaxConns,
+	// 	cfg.DBConfig.MaxIdleTime,
+	// )
 
-	if err != nil {
-		log.Fatalf("Failed to create database pool: %v", err)
-	}
-	defer dbPool.Close()
+	// if err != nil {
+	// 	log.Fatalf("Failed to create database pool: %v", err)
+	// }
+	// defer dbPool.Close()
 
 	appCtx := core.AppContext{
 		Config: cfg,
-		DBPool: dbPool,
+		// DBPool: dbPool,
 	}
 
 	handlers := api.InitHandlers(&appCtx)
@@ -39,6 +36,6 @@ func Run() {
 	api.RegisterRoutes(r, handlers)
 	v1.RegisterRoutes(r, handlers, &appCtx)
 
-	// r.Run(cfg.AppAddress)
-	r.Run(":8080") // For testing purposes, run on port 8080
+	r.Run(cfg.AppAddress + ":" + cfg.AppPort) // Listen and serve on the specified address and port
+	// r.Run(":8080") // For testing purposes, run on port 8080
 }

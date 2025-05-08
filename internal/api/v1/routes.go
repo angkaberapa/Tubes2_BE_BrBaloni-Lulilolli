@@ -8,8 +8,10 @@ import (
 
 // RegisterRoutes sets up the API routes for the v1 version of the API.
 func RegisterRoutes(r *gin.Engine, handlers *api.Handlers, appCtx *core.AppContext) {
-	// v1 := r.Group("/v1")
-
+	v1 := r.Group("/api/v1")
+	{
+		v1.GET("/scrape", ScrapeHandler)
+	}
 	// authGroup := v1.Group("/auth")
 	// {
 	// 	authGroup.GET("/signin", handlers.AuthHandler.SignInV1)

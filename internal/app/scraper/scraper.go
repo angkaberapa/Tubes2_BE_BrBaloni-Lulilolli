@@ -1,4 +1,4 @@
-package main
+package scraper
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ func contains(slice []string, value string) bool {
 	return false
 }
 
-func main() {
+func ScrapeElements() (map[string]*Element, error) {
 	url := "https://little-alchemy.fandom.com/wiki/Elements_(Little_Alchemy_2)"
 
 	// Request HTTP
@@ -134,7 +134,7 @@ func main() {
 	fmt.Printf("\nTotal elements: %d\n", len(elementsMapByName))
 	fmt.Printf("Total combinations: %d\n\n", totalCombinations)
 	fmt.Println("✅ Parsing completed!")
-
+	return elementsMapByName, nil
 	// contoh pemakaian
 	// time := elementsMapByName["Time"]
 }

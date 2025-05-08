@@ -32,18 +32,3 @@ func (h *Handler) HealthCheck(c *gin.Context) {
 		Message: "Application is running and healthy",
 	})
 }
-
-type Element struct {
-	Id           int
-	Name         string
-	CanCreate    []int
-	Combinations []*Combination
-}
-
-type Combination struct {
-	ResultId int
-	LeftId   int
-	RightId  int
-}
-
-var elementsByID = map[int]*Element{}
