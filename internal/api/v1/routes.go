@@ -11,6 +11,9 @@ func RegisterRoutes(r *gin.Engine, handlers *api.Handlers, appCtx *core.AppConte
 	v1 := r.Group("/api/v1")
 	{
 		v1.GET("/scrape", ScrapeHandler)
+		v1.GET("/search", SearchHandler)
+		v1.GET("/dfs", DFSHandler)
+		v1.GET("/dfs-concurrent", DFSConcurrentHandler)
 	}
 	// authGroup := v1.Group("/auth")
 	// {
