@@ -314,3 +314,42 @@ func compareInterfaceSlices(slice1, slice2 interface{}) int {
     }
     return output;
 }
+
+func printInterface(item interface{}) string {
+    switch v := item.(type) {
+    case *Element:
+        return v.Name
+    case []*Element:
+        names := "["
+        for i, element := range v {
+            names += element.Name
+            if i < len(v)-1 {
+                names += ", "
+            }
+        }
+        names += "]"
+        return names
+    case []interface{}:
+        names := "["
+        for i, element := range v {
+            names += printInterface(element)
+            if i < len(v)-1 {
+                names += ", "
+            }
+        }
+        names += "]"
+        return names
+    // case [][]*Element:
+    //     names := "["
+    //     for i, elementSlice := range v {
+    //         names += printInterface(elementSlice)
+    //         if i < len(v)-1 {
+    //             names += ", "
+    //         }
+    //     }
+    //     names += "]"
+    //     return names
+    default:
+        return fmt.Sprintf("%v", v) // Handle other types
+    }
+}
