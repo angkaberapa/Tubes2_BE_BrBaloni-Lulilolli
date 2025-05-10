@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"slices"
+
 	"github.com/PuerkitoBio/goquery"
 )
 
@@ -12,21 +14,12 @@ type Element struct {
 	Name         string
 	CanCreate    []string
 	Combinations []*Combination
+	Tier         int
 }
 type Combination struct {
 	ResultName string
 	LeftName   string
 	RightName  string
-}
-
-// Helper function to check if a string slice contains a specific value
-func contains(slice []string, value string) bool {
-	for _, v := range slice {
-		if v == value {
-			return true
-		}
-	}
-	return false
 }
 
 func ScrapeElements() (map[string]*Element, error) {
@@ -63,55 +56,76 @@ func ScrapeElements() (map[string]*Element, error) {
 			return
 		}
 		resultName := cells.Eq(0).ChildrenFiltered("a").First().Text()
+		// buang Time, Ruins, dan Archeologist
+		if resultName == "Time" || resultName == "Ruins" || resultName == "Archeologist" {
+			return
+		}
 		elementsName = append(elementsName, resultName)
 	})
 
-	// Temukan semua baris tabel
-	doc.Find("table.list-table tr").Each(func(i int, row *goquery.Selection) {
-		cells := row.Find("td")
-		if cells.Length() < 2 {
+	// Temukan semua tabel
+	doc.Find("table.list-table").Each(func(i int, table *goquery.Selection) {
+		// Temukan semua baris tabel
+
+		if i == 1 { // untuk tabel kedua (special elements yaitu time), skip.
 			return
 		}
-		resultName := cells.Eq(0).ChildrenFiltered("a").First().Text()
-		var combinations []*Combination
-		cells.Eq(1).Find("li").Each(func(_ int, li *goquery.Selection) {
-			var parts []string
-			li.ChildrenFiltered("a").Each(func(_ int, a *goquery.Selection) {
-				parts = append(parts, a.Text())
-			})
-			if len(parts) == 2 {
-				leftName := parts[0]
-				rightName := parts[1]
-				// check if leftName and rightName is in elementsName
-				if contains(elementsName, leftName) && contains(elementsName, rightName) {
-					combinations = append(combinations, &Combination{
-						ResultName: resultName,
-						LeftName:   leftName,
-						RightName:  rightName,
-					})
-					totalCombinations++
+
+		table.Find("tr").Each(func(j int, row *goquery.Selection) {
+			cells := row.Find("td")
+			if cells.Length() < 2 {
+				return
+			}
+			resultName := cells.Eq(0).ChildrenFiltered("a").First().Text()
+			var combinations []*Combination
+			cells.Eq(1).Find("li").Each(func(_ int, li *goquery.Selection) {
+				var parts []string
+				li.ChildrenFiltered("a").Each(func(_ int, a *goquery.Selection) {
+					parts = append(parts, a.Text())
+				})
+				if len(parts) == 2 {
+					leftName := parts[0]
+					rightName := parts[1]
+					// check if leftName and rightName is in elementsName
+					if slices.Contains(elementsName, leftName) && slices.Contains(elementsName, rightName) {
+						combinations = append(combinations, &Combination{
+							ResultName: resultName,
+							LeftName:   leftName,
+							RightName:  rightName,
+						})
+						totalCombinations++
+					}
+					// } else { // ada elemen yang dari Myths and Monsters atau dari (Time, Ruins, Archeologist)
+					// 	fmt.Println("Combination not found:", leftName, rightName)
+					// }
 				}
-				// } else { // ada elemen yang dari Myths and Monsters
-				// 	fmt.Println("Combination not found:", leftName, rightName)
-				// }
+			})
+			// buang Ruins dan Archeologist
+			if !slices.Contains(elementsName, resultName) {
+				return
+			}
+			currentTier := i
+			if i > 1 { // karena untuk tabel kedua (special elements yaitu time) di skip. (ini biar tier nya tidak bertambah aja sih)
+				currentTier = i - 1
+			}
+			if len(combinations) > 0 {
+				element := &Element{
+					Name:         resultName,
+					CanCreate:    nil,
+					Combinations: combinations,
+					Tier:         currentTier,
+				}
+				elementsMapByName[resultName] = element
+			} else { // memang tidak ada yang bisa membuatnya (contoh: earth)
+				element := &Element{
+					Name:         resultName,
+					CanCreate:    nil,
+					Combinations: nil,
+					Tier:         currentTier,
+				}
+				elementsMapByName[resultName] = element
 			}
 		})
-
-		if len(combinations) > 0 {
-			element := &Element{
-				Name:         resultName,
-				CanCreate:    nil,
-				Combinations: combinations,
-			}
-			elementsMapByName[resultName] = element
-		} else { // memang tidak ada yang bisa membuatnya (contoh: time)
-			element := &Element{
-				Name:         resultName,
-				CanCreate:    nil,
-				Combinations: nil,
-			}
-			elementsMapByName[resultName] = element
-		}
 	})
 
 	// Isi CanCreate untuk setiap elemen
@@ -120,11 +134,11 @@ func ScrapeElements() (map[string]*Element, error) {
 			leftElement := elementsMapByName[combination.LeftName]
 			rightElement := elementsMapByName[combination.RightName]
 
-			if !contains(leftElement.CanCreate, element.Name) {
+			if !slices.Contains(leftElement.CanCreate, element.Name) {
 				leftElement.CanCreate = append(leftElement.CanCreate, element.Name)
 			}
 
-			if !contains(rightElement.CanCreate, element.Name) {
+			if !slices.Contains(rightElement.CanCreate, element.Name) {
 				rightElement.CanCreate = append(rightElement.CanCreate, element.Name)
 			}
 		}
