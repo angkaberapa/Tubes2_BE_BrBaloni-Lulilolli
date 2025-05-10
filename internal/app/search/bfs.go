@@ -178,6 +178,8 @@ func checkConsistsOfBasicElements(item interface{}) (bool, int, interface{}) {
 			if isBasicElement(el) {
 				output = true
 				outputInterface = append(outputInterface, el)
+            } else {
+                outputInterface = append(outputInterface, convertToInterfaceSlice(expandElement(el)))
 			}
 		}
 
@@ -205,6 +207,7 @@ func checkConsistsOfBasicElements(item interface{}) (bool, int, interface{}) {
 		return false, 0, nil
 	}
 }
+
 
 func expandInterface(item interface{}) interface{} {
 	switch v := item.(type) {
