@@ -1,9 +1,11 @@
 package scraper
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"slices"
 
@@ -48,7 +50,7 @@ func ScrapeElements() (map[string]*Element, error) {
 	var elementsMapByName = map[string]*Element{}
 	var totalCombinations int = 0
 
-	// Temukan semua nama elemen dulu
+	// Temukan semua nama elemen dulu (biar enak validasi kombinasi yang ada elemen Myths and Monsters)
 	var elementsName []string
 	doc.Find("table.list-table tr").Each(func(i int, row *goquery.Selection) {
 		cells := row.Find("td")
@@ -63,9 +65,8 @@ func ScrapeElements() (map[string]*Element, error) {
 		elementsName = append(elementsName, resultName)
 	})
 
-	// Temukan semua tabel
+	// baru deh kita ambil semua kombinasi dari elemen yang ada di tabel
 	doc.Find("table.list-table").Each(func(i int, table *goquery.Selection) {
-		// Temukan semua baris tabel
 
 		if i == 1 { // untuk tabel kedua (special elements yaitu time), skip.
 			return
@@ -148,7 +149,44 @@ func ScrapeElements() (map[string]*Element, error) {
 	fmt.Printf("\nTotal elements: %d\n", len(elementsMapByName))
 	fmt.Printf("Total combinations: %d\n\n", totalCombinations)
 	fmt.Println("✅ Parsing completed!")
+
+	// save ke .json
+	err = os.MkdirAll("data", os.ModePerm)
+	if err != nil {
+		log.Printf("⚠️  Gagal membuat folder data/: %v\n", err)
+	} else {
+		file, err := os.Create("data/elements.json")
+		if err != nil {
+			log.Printf("⚠️  Gagal membuat file JSON: %v\n", err)
+		} else {
+			defer file.Close()
+			err := json.NewEncoder(file).Encode(elementsMapByName)
+			if err != nil {
+				log.Printf("⚠️  Gagal menulis data ke file JSON: %v\n", err)
+			} else {
+				fmt.Println("💾 Data berhasil disimpan ke data/elements.json")
+			}
+		}
+	}
+
 	return elementsMapByName, nil
 	// contoh pemakaian
 	// time := elementsMapByName["Time"]
+}
+
+func LoadElementsFromFile() (map[string]*Element, error) {
+	file, err := os.Open("data/elements.json")
+	if err != nil {
+		return nil, fmt.Errorf("gagal membuka file: %w", err)
+	}
+	defer file.Close()
+
+	var elements map[string]*Element
+	err = json.NewDecoder(file).Decode(&elements)
+	if err != nil {
+		return nil, fmt.Errorf("gagal membaca JSON: %w", err)
+	}
+
+	fmt.Printf("📦 Loaded %d elements from file.\n", len(elements))
+	return elements, nil
 }
