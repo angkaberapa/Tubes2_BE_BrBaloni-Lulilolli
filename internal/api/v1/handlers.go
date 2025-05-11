@@ -21,7 +21,7 @@ func ScrapeHandler(c *gin.Context) {
 }
 
 func SearchHandler(c *gin.Context) {
-	target := "Aquarium"
+	target := "Livestock"
 	maxrecipe := 1
 
 	// Call your search function here

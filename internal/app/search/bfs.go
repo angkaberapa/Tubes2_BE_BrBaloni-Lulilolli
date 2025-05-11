@@ -21,7 +21,7 @@ func BFS(target string, maxrecipe int) (interface{}, error, int) { // ganti retu
 	return results, nil, nodeCount
 }
 
-func findCombinationRouteBFS(target *scraper.Element) (interface{}, int) {
+func findCombinationRouteBFS(target *scraper.Element, recipeTarget int) (interface{}, int) {
 	if isBasicElement(target) {
 		return target.Name, 1
 	}
@@ -135,7 +135,45 @@ func findCombinationRouteBFS(target *scraper.Element) (interface{}, int) {
 		}
 		oldBase = base
 		base = newBase
+
+		output := []interface{}{}
+        for _, item := range oldBase {
+            numberOfRecipesObtained += countRecipesObtained(item)
+            output = append(output, item)
+            if numberOfRecipesObtained > recipeTarget {
+                return output, combinationsChecked
+            }
+        }
 	}
+}
+
+func countRecipesObtained(item interface{}) int {
+    count := 0
+    switch v := item.(type) {
+    case *Element:
+        if isBasicElement(v) {
+            return 1
+        } else {
+            return 0
+        }
+    case []*Element:
+        if isBasicElement(v[0]) && isBasicElement(v[2]) {
+            count++
+        } else {
+            return 0
+        }
+    case []interface{}:
+        for _, el := range v {
+            if el_1, ok := el.([]*Element); ok {
+                count += countRecipesObtained(el_1[0]) * countRecipesObtained(el_1[2])
+            } else if el_2, ok := el.([]interface{}); ok {
+                count += countRecipesObtained(el_2[0]) + countRecipesObtained(el_2[2])
+            }
+        }
+    default:
+        return 0
+    }
+    return count
 }
 
 func checkInterface(a interface{}) (bool, int, []interface{}) {
@@ -171,38 +209,38 @@ func checkConsistsOfBasicElements(item interface{}) (bool, int, interface{}) {
 	case *scraper.Element:
 		return isBasicElement(v), 1, v
 	case []*scraper.Element:
-		output := false
+		output := true
 		outputInterface := []interface{}{}
 		for _, el := range v {
 			elementsChecked++
 			if isBasicElement(el) {
-				output = true
 				outputInterface = append(outputInterface, el)
             } else {
+				output = false
                 outputInterface = append(outputInterface, convertToInterfaceSlice(expandElement(el)))
 			}
 		}
 
-		if output {
-			return true, elementsChecked, outputInterface
-		}
-		return false, elementsChecked, v
+		// if output {
+		// 	return true, elementsChecked, outputInterface
+		// }
+		return output, elementsChecked, outputInterface
 	case []interface{}:
-		output := false
+		output := true
 		outputInterface := []interface{}{}
 		for _, x := range v {
 			checker, count, outputToAdd := checkConsistsOfBasicElements(x)
 			elementsChecked += count
-			if checker {
-				output = true
-				outputInterface = append(outputInterface, outputToAdd)
+			if !checker {
+				output = false
 			}
+			outputInterface = append(outputInterface, outputToAdd)
 		}
 
 		if output {
 			return true, elementsChecked, outputInterface
 		}
-		return false, elementsChecked, v
+		return false, elementsChecked, outputInterface
 	default:
 		return false, 0, nil
 	}
@@ -214,7 +252,7 @@ func expandInterface(item interface{}) interface{} {
 	case []interface{}:
 		result := []interface{}{}
 		for _, el := range v {
-			expanded := expandInterface(el)
+			expanded := expandInterface(el) 
 			if expanded != nil {
 				result = append(result, expanded)
 			}
