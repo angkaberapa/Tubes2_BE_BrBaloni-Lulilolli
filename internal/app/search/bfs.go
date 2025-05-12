@@ -12,7 +12,7 @@ func BFS(target string, maxrecipe int) (interface{}, error, int) { // ganti retu
 		return nil, err, -1
 	}
 
-	results, nodeCount := findCombinationRouteBFS(elements[target])
+	results, nodeCount := findCombinationRouteBFS(elements[target], maxrecipe)
 	// masukkan kode disini
 	if results == nil {
 		return nil, fmt.Errorf("no valid combination found"), nodeCount
@@ -21,31 +21,34 @@ func BFS(target string, maxrecipe int) (interface{}, error, int) { // ganti retu
 	return results, nil, nodeCount
 }
 
-func findCombinationRouteBFS(target *scraper.Element) (interface{}, int) {
-	if isBasicElement(target) {
-		return target.Name, 1
+func findCombinationRouteBFS(target *scraper.Element, recipeTarget int) (interface{}, int, []interface{}) {
+    if (isBasicElement(target)) {
+        return target.Name, 1, []interface{}{target}
 	}
 	elements, err := scraper.LoadElementsFromFile()
 	if err != nil {
-		return nil, 0
+		return nil, 0, nil
 	}
 
-	combinationsNumber := len(target.Combinations)
-	combinationsChecked := 1
-	base := []interface{}{}
-	for i := 0; i < combinationsNumber; i++ {
+    combinationsNumber := len(target.Combinations) 
+    combinationsChecked := 1
+    base := []interface{}{}
+    for i := 0; i < combinationsNumber; i++ {
 		if elements[target.Combinations[i].LeftName].Tier < target.Tier && elements[target.Combinations[i].RightName].Tier < target.Tier {
-			base = append(base, combinationToElements(target.Combinations[i]))
-		} else {
-			// fmt.Println("kombinasi tidak valid")
-		}
-	}
-	oldBase := base
-	firstIteration := true
+            base = append(base, combinationToElements(target.Combinations[i]))
+        } else {
+            // fmt.Println("kombinasi tidak valid")
+        }
+    }
+    oldBase := base
+    firstIteration := true
+	listOfElements := []interface{}{target}
 	// fmt.Println("Base:", printInterface(base))
 	// fmt.Println("Base length:", len(base))
 
 	for {
+        numberOfRecipesObtained := 0
+
 		for i, item := range base {
 			// fmt.Println("Item:", printInterface(item))
 			var itemLeft, itemRight interface{}
@@ -104,7 +107,7 @@ func findCombinationRouteBFS(target *scraper.Element) (interface{}, int) {
 			// fmt.Println("checkInterface:", printInterface(outputBase), "total checked:", combinationsChecked)
 			if checkerLeft && checkerRight {
 				// fmt.Println("Item:", printInterface(item))
-				return outputBase, combinationsChecked
+				// return outputBase, combinationsChecked
 			}
 		}
 
@@ -114,14 +117,17 @@ func findCombinationRouteBFS(target *scraper.Element) (interface{}, int) {
 
 		newBase := []interface{}{}
 		for _, item := range base {
-			expanded := expandInterface(item)
+			// fmt.Println("item:", printInterface(item))
+			expanded, resultIterated := expandInterface(item)
+			// fmt.Println("resultIterated:", resultIterated)
+			listOfElements = addToIterated(listOfElements, resultIterated)
 			// fmt.Println("Expanded:", expanded)
 
 			// if expanded != nil {
 			//     switch v := expanded.(type) {
 			//     case []interface{}:
-			//         for _, element := range v {
-			//             newBase = append(newBase, element)
+			//         for _, scraper.Element := range v {
+			//             newBase = append(newBase, scraper.Element)
 			//         }
 			//     default:
 			//         newBase = append(newBase, v)
@@ -135,34 +141,74 @@ func findCombinationRouteBFS(target *scraper.Element) (interface{}, int) {
 		}
 		oldBase = base
 		base = newBase
+
+		output := []interface{}{}
+        for _, item := range oldBase {
+            numberOfRecipesObtained += countRecipesObtained(item)
+            output = append(output, item)
+            if numberOfRecipesObtained > recipeTarget {
+                return output, combinationsChecked, listOfElements
+            }
+        }
 	}
 }
 
+func countRecipesObtained(item interface{}) int {
+    count := 0
+    switch v := item.(type) {
+    case *scraper.Element:
+        if isBasicElement(v) {
+            return 1
+        } else {
+            return 0
+        }
+    case []*scraper.Element:
+        if isBasicElement(v[0]) && isBasicElement(v[1]) {
+            count++
+        } else {
+            return 0
+        }
+    case []interface{}:
+        for _, el := range v {
+            if el_1, ok := el.([]*scraper.Element); ok {
+                count += countRecipesObtained(el_1[0]) * countRecipesObtained(el_1[1])
+            } else if el_2, ok := el.([]interface{}); ok {
+				for i, _ := range el_2 {
+					count += countRecipesObtained(el_2[i])
+				}
+            }
+        }
+    default:
+        return 0
+    }
+    return count
+}
 func checkInterface(a interface{}) (bool, int, []interface{}) {
-	elementsChecked := 0
-	switch res := a.(type) {
-	case []interface{}:
-		output := false
-		outputInterface := []interface{}{}
-		for _, v := range res {
-			checker, count, outputToAdd := checkConsistsOfBasicElements(v)
-			elementsChecked += count
-			if checker {
-				output = true
-				outputInterface = append(outputInterface, outputToAdd)
-			}
-		}
-
-		if output {
-			return true, elementsChecked, outputInterface
-		}
-		return false, elementsChecked, res
-	case interface{}:
-		checker, count, outputToAdd := checkConsistsOfBasicElements(res)
-		return checker, count, []interface{}{outputToAdd}
-	default:
-		return false, 0, nil
-	}
+    elementsChecked := 0
+    switch res := a.(type) {
+    case []interface{}:
+        output := false
+        outputInterface := []interface{}{}
+        for _, v := range res {
+            checker, count, outputToAdd := checkConsistsOfBasicElements(v)
+            elementsChecked += count
+            if checker {
+                output = true
+                outputInterface = append(outputInterface, outputToAdd)
+                // fmt.Println("Outputinterface:", printInterface(outputInterface))
+            }
+        }
+        
+        if output {
+            return true, elementsChecked, outputInterface
+        }
+        return false, elementsChecked, res
+    case interface{}:
+        checker, count, outputToAdd := checkConsistsOfBasicElements(res)
+        return checker, count, []interface{}{outputToAdd}
+    default:
+        return false, 0, nil
+    }
 }
 
 func checkConsistsOfBasicElements(item interface{}) (bool, int, interface{}) {
@@ -208,79 +254,107 @@ func checkConsistsOfBasicElements(item interface{}) (bool, int, interface{}) {
 	}
 }
 
+func addToIterated(iterated []interface{}, resultIterated interface{}) []interface{} {
 
-func expandInterface(item interface{}) interface{} {
+	if resultIterated1, ok := resultIterated.([]interface{}); ok {
+		// fmt.Println("resultIterated1:", printInterface(resultIterated1))
+		// fmt.Println("iterated:", printInterface(iterated))
+		for i, _ := range resultIterated1 {
+			exists := false
+			for j, _ := range iterated {
+				if resultIterated1[i] == iterated[j] {
+					exists = true
+					break
+				} 
+			}
+
+			if !exists {
+				iterated = append(iterated, resultIterated1[i])
+			}
+		}
+
+		return iterated
+		}
+	
+	return nil
+}
+
+func expandInterface(item interface{}) ([]interface{}, []interface{}) {
 	switch v := item.(type) {
 	case []interface{}:
 		result := []interface{}{}
+		iterated := []interface{}{}
 		for _, el := range v {
-			expanded := expandInterface(el)
+			expanded, resultIterated := expandInterface(el) 
 			if expanded != nil {
 				result = append(result, expanded)
 			}
+			for i, _ := range resultIterated {
+				iterated = addToIterated(iterated, resultIterated[i])
+			}
 		}
-		return result
+		return result, iterated
 	case []*scraper.Element:
 		result := []interface{}{}
 		for _, element := range v {
-			expanded := expandInterface(element)
+			expanded, _ := expandInterface(element)
 			if expanded != nil {
 				result = append(result, expanded)
 			}
 		}
-		return result
+		return result, []interface{}{v[0], v[1]}
 	case *scraper.Element:
 		if isBasicElement(v) {
-			return v
+			return []interface{}{v}, []interface{}{v}
 		} else {
-			return convertToInterfaceSlice(expandElement(v))
+			return convertToInterfaceSlice(expandElement(v)), []interface{}{v}
 		}
 
 	default:
-		return nil
+		return nil, nil
 	}
 }
 
-func convertToInterfaceSlice(data [][]*scraper.Element) []interface{} {
-	result := make([]interface{}, len(data))
-	for i, elementSlice := range data {
-		result[i] = elementSlice
-	}
-	return result
+func convertToInterfaceSlice(data []interface{}) []interface{} {
+    result := make([]interface{}, len(data))
+    for i, elementSlice := range data {
+        result[i] = elementSlice
+    }
+    return result
 }
 
-func expandElement(element *scraper.Element) [][]*scraper.Element {
-	combinations := elementToCombinations(element)
-	// fmt.Println("Combinations Length:", len(combinations))
+func expandElement(element *scraper.Element) []interface{} {
+    combinations := elementToCombinations(element)
+    // fmt.Println("Combinations Length:", len(combinations))
 	elements, err := scraper.LoadElementsFromFile()
 	if err != nil {
 		return nil
 	}
-	var output [][]*scraper.Element
-	for _, combination := range combinations {
+    var output []interface{}
+    for _, combination := range combinations {
 		if elements[combination.LeftName].Tier < element.Tier && elements[combination.RightName].Tier < element.Tier {
-			output = append(output, combinationToElements(combination))
-		} else {
-			// fmt.Println("kombinasi tidak valid")
-		}
-	}
+            output = append(output, combinationToElements(combination))
+        } else {
+            // fmt.Println("kombinasi tidak valid")
+        }
+    }
 
-	// fmt.Println("Output: %v", output)
-	return output
+    // fmt.Println("Output: %v", output)
+    return output
 }
 
 // Fungsi untuk mengecek apakah elemen adalah elemen dasar
 func isBasicElement(element *scraper.Element) bool {
-	return element.Name == "Water" || element.Name == "Earth" || element.Name == "Fire" || element.Name == "Air"
+    return element.Name == "Water" || element.Name == "Earth" || element.Name == "Fire" || element.Name == "Air"
 }
 
 // elementToCombinations mengubah array elemen menjadi [kombinasi1, kombinasi2, kombinasi3]
 func elementToCombinations(element *scraper.Element) []*scraper.Combination {
-	var combinations []*scraper.Combination
-	for _, combo := range element.Combinations {
-		combinations = append(combinations, combo)
-	}
-	return combinations
+    var combinations []*scraper.Combination
+    for _, combo := range element.Combinations {
+        combinations = append(combinations, combo)
+    }
+    return combinations
 }
 
 // combinationToElements mengubah kombinasi1 menjadi [elemenpenyusun1, elemenpenyusun2]
@@ -293,42 +367,42 @@ func combinationToElements(combination *scraper.Combination) []*scraper.Element 
 }
 
 func compareInterfaceSlices(slice1, slice2 interface{}) int {
-	// fmt.Println("Slice1:", printInterface(slice1), "Slice2:", printInterface(slice2))
-	output := 0
-	if v1, ok := slice1.([]interface{}); ok {
-		if v2, ok := slice2.([]interface{}); ok {
-			for i, _ := range v1 {
-				output += compareInterfaceSlices(v1[i], v2[i])
-			}
-		}
-		if v2, ok := slice2.([]*scraper.Element); ok {
-			for i, _ := range v1 {
-				output += compareInterfaceSlices(v1[i], v2[i])
-			}
-		}
-	}
+    // fmt.Println("Slice1:", printInterface(slice1), "Slice2:", printInterface(slice2))
+    output := 0
+    if v1, ok := slice1.([]interface{}); ok {
+        if v2, ok := slice2.([]interface{}); ok {
+            for i, _ := range v1 {
+                output += compareInterfaceSlices(v1[i], v2[i])
+            }
+        }
+        if v2, ok := slice2.([]*scraper.Element); ok {
+            for i, _ := range v1 {
+                output += compareInterfaceSlices(v1[i], v2[i])
+            }
+        }
+    }
 
-	if v1, ok := slice1.([]*scraper.Element); ok {
-		if v2, ok := slice2.([]interface{}); ok {
-			for i, _ := range v1 {
-				output += compareInterfaceSlices(v1[i], v2[i])
-			}
-		}
-		if v2, ok := slice2.([]*scraper.Element); ok {
-			for i, _ := range v1 {
-				output += compareInterfaceSlices(v1[i], v2[i])
-			}
-		}
-	}
-
-	if v1, ok := slice1.(*scraper.Element); ok {
-		if v2, ok := slice2.(*scraper.Element); ok {
-			if v1.Name == v2.Name {
-				output++
-			}
-		}
-	}
-	return output
+    if v1, ok := slice1.([]*scraper.Element); ok {
+        if v2, ok := slice2.([]interface{}); ok {
+            for i, _ := range v1 {
+                output += compareInterfaceSlices(v1[i], v2[i])
+            }
+        }
+        if v2, ok := slice2.([]*scraper.Element); ok {
+            for i, _ := range v1 {
+                output += compareInterfaceSlices(v1[i], v2[i])
+            }
+        }
+    }
+    
+    if v1, ok := slice1.(*scraper.Element); ok {
+        if v2, ok := slice2.(*scraper.Element); ok {
+            if v1.Name == v2.Name {
+                output++
+            }
+        }
+    }
+    return output
 }
 
 func printInterface(item interface{}) string {
