@@ -55,6 +55,7 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 		}
 	}
 
+	fmt.Println("checker", checker)
 	for !bfsFound {
 		currentCheck := checker[0]
 		checker = checker[1:]
@@ -73,26 +74,35 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 					rightElement := stringToElement(elements, currentElement.Combinations[i].RightName)
 
 					if leftElement.Tier < currentElement.Tier && rightElement.Tier < currentElement.Tier {
-						addToCheck = append(addToCheck, currentElement.Combinations[i].LeftName)
-						addToCheck = append(addToCheck, currentElement.Combinations[i].RightName)
-						toAdd := []string{currentElement.Name, currentElement.Combinations[i].LeftName, currentElement.Combinations[i].RightName}
-
-						toBeInserted := true
-						for j := 0; j < len(base); j++ {
-							if toAdd[0] == base[j][0] {
-								if (toAdd[1] == base[j][1] && toAdd[2] == base[j][2]) {
-									toBeInserted = false
-								}
+						toBeInsertedLeft := true
+						toBeInsertedRight := true
+						for j := 0; j < len(addToCheck); j++ {
+							if addToCheck[j] == currentElement.Combinations[i].LeftName {
+								toBeInsertedLeft = false
+							}
+							if addToCheck[j] == currentElement.Combinations[i].RightName {
+								toBeInsertedRight = false
 							}
 						}
-
-						if (toBeInserted) {
-							base = append(base, toAdd)
+						if toBeInsertedLeft {
+							addToCheck = append(addToCheck, currentElement.Combinations[i].LeftName)
 						}
+						if toBeInsertedRight {
+							addToCheck = append(addToCheck, currentElement.Combinations[i].RightName)
+						}
+						toAdd := []string{currentElement.Name, currentElement.Combinations[i].LeftName, currentElement.Combinations[i].RightName}
+
+						// fmt.Println("toAdd", toAdd)
+						// fmt.Println("base", base)
+						for j := 0; j < len(base); j++ {
+							if (toAdd[0] == base[j][0] && toAdd[1] == base[j][1] && toAdd[2] == base[j][2]) {
+								base = append(base[:j], base[j+1:]...)
+							}
+							
+						}
+						base = append(base, toAdd)
 					}
 				}
-			} else {
-				addToCheck = append(addToCheck, currentCheck[i])
 			}
 		}
 		
@@ -108,12 +118,14 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 			}
 		}
 
+		fmt.Println("checker", checker)
 		if bfsFound {
 			basicElements := [][]string{[]string{"Fire", "-", "-"}, []string{"Water", "-", "-"}, []string{"Earth", "-", "-"}, []string{"Air", "-", "-"}}
 			for i := 0; i < len(basicElements); i++ {
 				base = append(base, basicElements[i])
 			}
 			fixList, existsList, counter := createFixList(base)
+			fmt.Println("fixList", fixList)
 			m := createMap(fixList, existsList)
 			mapp := limitRecipe(counter, m, target, numberOfRecipe)
 
@@ -130,6 +142,7 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 }
 
 func createFixList(list [][]string) ([][]string, []string, map[string][]int) {
+	fmt.Println("list", list)
 	fixList := [][]string{[]string{"Water", "-", "-"}, []string{"Earth", "-", "-"},
 		[]string{"Fire", "-", "-"}, []string{"Air", "-", "-"}}
 	exists := []string{"Water", "Earth", "Fire", "Air"}
@@ -159,6 +172,7 @@ func createFixList(list [][]string) ([][]string, []string, map[string][]int) {
 		}
 	}
 
+	fmt.Println("fixList", fixList)
 	output := [][]string{}
 	for i := len(fixList) - 1; i >= 0; i-- {
 		output = append(output, fixList[i])
@@ -320,11 +334,13 @@ func limitRecipe(counter map[string][]int, fixList map[string][][]string, name s
 
 func BFS(target string, maxrecipe int) ([]GraphNode, []GraphEdge, int, error) {
 	elements, err := scraper.LoadElementsFromFile()
+	fmt.Println("elements", elements)
+
 	if err != nil {
 		return nil, nil, -1, err
 	}
 
-	nodes, edges, nodeCount := findCombinationRouteBFS(elements, target, 17)
+	nodes, edges, nodeCount := findCombinationRouteBFS(elements, target, 5)
 	// masukkan kode disini
 	if nodes == nil {
 		return nil, nil, nodeCount, fmt.Errorf("no valid combination found")

@@ -11,7 +11,20 @@ import (
 // 	if err != nil {
 // 		return nil, err, -1
 // 	}
+// func BFS(target string, maxrecipe int) (interface{}, error, int) { // ganti return value nya
+// 	elements, err := scraper.LoadElementsFromFile()
+// 	if err != nil {
+// 		return nil, err, -1
+// 	}
 
+// 	results, nodeCount := findCombinationRouteBFS(elements[target], maxrecipe)
+// 	// masukkan kode disini
+// 	if results == nil {
+// 		return nil, fmt.Errorf("no valid combination found"), nodeCount
+// 	}
+// 	fmt.Println("Results:", printInterface(results))
+// 	return results, nil, nodeCount
+// }
 // 	results, nodeCount := findCombinationRouteBFS(elements[target], maxrecipe)
 // 	// masukkan kode disini
 // 	if results == nil {
@@ -25,6 +38,11 @@ import (
 // 	if isBasicElement(target) {
 // 		return target.Name, 1, []interface{}{target}
 
+// 	}
+// 	elements, err := scraper.LoadElementsFromFile()
+// 	if err != nil {
+// 		return nil, 0, nil
+// 	}
 // 	}
 // 	elements, err := scraper.LoadElementsFromFile()
 // 	if err != nil {
@@ -61,10 +79,33 @@ import (
 // 				itemLeft = item.([]interface{})[0]
 // 				itemRight = item.([]interface{})[1]
 // 			}
+// 		for i, item := range base {
+// 			// fmt.Println("Item:", printInterface(item))
+// 			var itemLeft, itemRight interface{}
+// 			if items, ok := item.([]*scraper.Element); ok && len(items) >= 2 {
+// 				itemLeft = item.([]*scraper.Element)[0]
+// 				itemRight = item.([]*scraper.Element)[1]
+// 			}
+// 			if items, ok := item.([]interface{}); ok && len(items) >= 2 {
+// 				itemLeft = item.([]interface{})[0]
+// 				itemRight = item.([]interface{})[1]
+// 			}
 
 // 			// fmt.Println("Item Left:", printInterface(itemLeft))
 // 			// fmt.Println("Item Right:", printInterface(itemRight))
+// 			// fmt.Println("Item Left:", printInterface(itemLeft))
+// 			// fmt.Println("Item Right:", printInterface(itemRight))
 
+// 			resultLeftBool := false
+// 			var resultLeft interface{}
+// 			checkerLeft, countLeft, outputBaseLeft := checkInterface(itemLeft)
+// 			if len(outputBaseLeft) == 1 {
+// 				if x, ok := outputBaseLeft[0].(*scraper.Element); ok {
+// 					resultLeftBool = true
+// 					resultLeft = x
+// 				}
+// 			}
+// 			combinationsChecked += countLeft // Hitung elemen yang diperiksa
 // 			resultLeftBool := false
 // 			var resultLeft interface{}
 // 			checkerLeft, countLeft, outputBaseLeft := checkInterface(itemLeft)
@@ -86,7 +127,27 @@ import (
 // 				}
 // 			}
 // 			combinationsChecked += countRight // Hitung elemen yang diperiksa
+// 			resultRightBool := false
+// 			var resultRight interface{}
+// 			checkerRight, countRight, outputBaseRight := checkInterface(itemRight)
+// 			if len(outputBaseRight) == 1 {
+// 				if x, ok := outputBaseRight[0].(*scraper.Element); ok {
+// 					resultRightBool = true
+// 					resultRight = x
+// 				}
+// 			}
+// 			combinationsChecked += countRight // Hitung elemen yang diperiksa
 
+// 			var outputBase []interface{}
+// 			if resultLeftBool && resultRightBool {
+// 				outputBase = []interface{}{resultLeft, resultRight}
+// 			} else if resultLeftBool && !resultRightBool {
+// 				outputBase = []interface{}{resultLeft, outputBaseRight}
+// 			} else if !resultLeftBool && resultRightBool {
+// 				outputBase = []interface{}{outputBaseLeft, resultRight}
+// 			} else if !resultLeftBool && !resultRightBool {
+// 				outputBase = []interface{}{outputBaseLeft, outputBaseRight}
+// 			}
 // 			var outputBase []interface{}
 // 			if resultLeftBool && resultRightBool {
 // 				outputBase = []interface{}{resultLeft, resultRight}
@@ -104,7 +165,19 @@ import (
 // 				// fmt.Println("Combinations Checked dikurangi:", compareInterfaceSlices(outputBase, oldBase[i]))
 // 				combinationsChecked -= compareInterfaceSlices(outputBase, oldBase[i]) // Hitung elemen yang diperiksa
 // 			}
+// 			if !firstIteration {
+// 				// fmt.Println("Output Base:", printInterface(outputBase))
+// 				// fmt.Println("oldBase[i]:", printInterface(oldBase[i]))
+// 				// fmt.Println("Combinations Checked dikurangi:", compareInterfaceSlices(outputBase, oldBase[i]))
+// 				combinationsChecked -= compareInterfaceSlices(outputBase, oldBase[i]) // Hitung elemen yang diperiksa
+// 			}
 
+// 			// fmt.Println("checkInterface:", printInterface(outputBase), "total checked:", combinationsChecked)
+// 			if checkerLeft && checkerRight {
+// 				// fmt.Println("Item:", printInterface(item))
+// 				// return outputBase, combinationsChecked
+// 			}
+// 		}
 // 			// fmt.Println("checkInterface:", printInterface(outputBase), "total checked:", combinationsChecked)
 // 			if checkerLeft && checkerRight {
 // 				// fmt.Println("Item:", printInterface(item))
@@ -115,7 +188,17 @@ import (
 // 		if firstIteration {
 // 			firstIteration = false
 // 		}
+// 		if firstIteration {
+// 			firstIteration = false
+// 		}
 
+// 		newBase := []interface{}{}
+// 		for _, item := range base {
+// 			// fmt.Println("item:", printInterface(item))
+// 			expanded, resultIterated := expandInterface(item)
+// 			// fmt.Println("resultIterated:", resultIterated)
+// 			listOfElements = addToIterated(listOfElements, resultIterated)
+// 			// fmt.Println("Expanded:", expanded)
 // 		newBase := []interface{}{}
 // 		for _, item := range base {
 // 			// fmt.Println("item:", printInterface(item))
@@ -247,6 +330,21 @@ import (
 // 			}
 // 			outputInterface = append(outputInterface, outputToAdd)
 // 		}
+// 		// if output {
+// 		// 	return true, elementsChecked, outputInterface
+// 		// }
+// 		return output, elementsChecked, outputInterface
+// 	case []interface{}:
+// 		output := true
+// 		outputInterface := []interface{}{}
+// 		for _, x := range v {
+// 			checker, count, outputToAdd := checkConsistsOfBasicElements(x)
+// 			elementsChecked += count
+// 			if !checker {
+// 				output = false
+// 			}
+// 			outputInterface = append(outputInterface, outputToAdd)
+// 		}
 
 // 		if output {
 // 			return true, elementsChecked, outputInterface
@@ -256,7 +354,16 @@ import (
 // 		return false, 0, nil
 // 	}
 // }
+// 		if output {
+// 			return true, elementsChecked, outputInterface
+// 		}
+// 		return false, elementsChecked, outputInterface
+// 	default:
+// 		return false, 0, nil
+// 	}
+// }
 
+// func addToIterated(iterated []interface{}, resultIterated interface{}) []interface{} {
 // func addToIterated(iterated []interface{}, resultIterated interface{}) []interface{} {
 
 // 	if resultIterated1, ok := resultIterated.([]interface{}); ok {
@@ -271,6 +378,10 @@ import (
 // 				}
 // 			}
 
+// 			if !exists {
+// 				iterated = append(iterated, resultIterated1[i])
+// 			}
+// 		}
 // 			if !exists {
 // 				iterated = append(iterated, resultIterated1[i])
 // 			}
@@ -317,6 +428,10 @@ import (
 // 		return nil, nil
 // 	}
 // }
+// 	default:
+// 		return nil, nil
+// 	}
+// }
 
 // func convertToInterfaceSlice(data []interface{}) []interface{} {
 // 	result := make([]interface{}, len(data))
@@ -346,7 +461,7 @@ import (
 // 	return output
 // }
 
-// Fungsi untuk mengecek apakah elemen adalah elemen dasar
+// // Fungsi untuk mengecek apakah elemen adalah elemen dasar
 func isBasicElement(element *scraper.Element) bool {
 	return element.Name == "Water" || element.Name == "Earth" || element.Name == "Fire" || element.Name == "Air"
 }
@@ -360,6 +475,14 @@ func isBasicElement(element *scraper.Element) bool {
 // 	return combinations
 // }
 
+// // combinationToElements mengubah kombinasi1 menjadi [elemenpenyusun1, elemenpenyusun2]
+// func combinationToElements(combination *scraper.Combination) []*scraper.Element {
+// 	elements, err := scraper.LoadElementsFromFile()
+// 	if err != nil {
+// 		return nil
+// 	}
+// 	return []*scraper.Element{elements[combination.LeftName], elements[combination.RightName]}
+// }
 // // combinationToElements mengubah kombinasi1 menjadi [elemenpenyusun1, elemenpenyusun2]
 // func combinationToElements(combination *scraper.Combination) []*scraper.Element {
 // 	elements, err := scraper.LoadElementsFromFile()
