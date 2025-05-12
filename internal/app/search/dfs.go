@@ -2,6 +2,7 @@ package search
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/app/scraper"
 )
@@ -37,7 +38,12 @@ func findCombinationRouteDFS(target *scraper.Element) (interface{}, int) {
 		if isBasicElement(element) {
 			return element.Name
 		}
-
+		// sort combinations based on sum of its LeftName.Tier and RightName.Tier
+		sort.Slice(element.Combinations, func(i, j int) bool {
+			left := elements[element.Combinations[i].LeftName]
+			right := elements[element.Combinations[i].RightName]
+			return left.Tier+right.Tier < elements[element.Combinations[j].LeftName].Tier+elements[element.Combinations[j].RightName].Tier
+		})
 		for _, combo := range element.Combinations {
 			leftElement := elements[combo.LeftName]
 			rightElement := elements[combo.RightName]

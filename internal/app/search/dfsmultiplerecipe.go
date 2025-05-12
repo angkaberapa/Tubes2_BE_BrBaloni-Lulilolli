@@ -2,6 +2,7 @@ package search
 
 import (
 	"fmt"
+	"sort"
 	"sync"
 
 	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/app/scraper"
@@ -65,7 +66,12 @@ func findMultipleRouteDFS(target *scraper.Element, maxrecipe int) ([]interface{}
 		var wg sync.WaitGroup
 		var recipes []interface{}
 		var recipesCount int
-
+		// sort combinations based on sum of its LeftName.Tier and RightName.Tier
+		sort.Slice(element.Combinations, func(i, j int) bool {
+			left := elements[element.Combinations[i].LeftName]
+			right := elements[element.Combinations[i].RightName]
+			return left.Tier+right.Tier < elements[element.Combinations[j].LeftName].Tier+elements[element.Combinations[j].RightName].Tier
+		})
 		for _, combo := range element.Combinations {
 			leftElement := elements[combo.LeftName]
 			rightElement := elements[combo.RightName]
