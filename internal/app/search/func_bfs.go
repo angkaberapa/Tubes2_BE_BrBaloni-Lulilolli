@@ -61,7 +61,6 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 
 		for i := 0; i < len(currentCheck); i++ {
 			addToCheck := []string{}
-
 			if !isBasicElementByName(currentCheck[i]) {
 				combinationsChecked += 2
 
@@ -69,20 +68,21 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 				combinationsNumber = len(currentElement.Combinations)
 
 				for i := 0; i < combinationsNumber; i++ {
-					addToCheck = append(addToCheck, currentElement.Combinations[i].LeftName)
-					addToCheck = append(addToCheck, currentElement.Combinations[i].RightName)
 
 					leftElement := stringToElement(elements, currentElement.Combinations[i].LeftName)
 					rightElement := stringToElement(elements, currentElement.Combinations[i].RightName)
 
 					if leftElement.Tier < currentElement.Tier && rightElement.Tier < currentElement.Tier {
+						addToCheck = append(addToCheck, currentElement.Combinations[i].LeftName)
+						addToCheck = append(addToCheck, currentElement.Combinations[i].RightName)
 						toAdd := []string{currentElement.Name, currentElement.Combinations[i].LeftName, currentElement.Combinations[i].RightName}
 						base = append(base, toAdd)
 					}
 				}
 			}
-
-			checker = append(checker, addToCheck)
+			if len(addToCheck) > 0 {
+				checker = append(checker, addToCheck)
+			}
 		}
 
 		for i := 0; i < len(checker); i++ {
@@ -92,14 +92,13 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 				break
 			}
 		}
-
-		if bfsFound {
-			basicElements := [][]string{[]string{"Fire", "-", "-"}, []string{"Water", "-", "-"}, []string{"Earth", "-", "-"}, []string{"Air", "-", "-"}}
-			for i := 0; i < len(basicElements); i++ {
-				base = append(base, basicElements[i])
-			}
-			return base, combinationsChecked
+	}
+	if bfsFound {
+		basicElements := [][]string{[]string{"Fire", "-", "-"}, []string{"Water", "-", "-"}, []string{"Earth", "-", "-"}, []string{"Air", "-", "-"}}
+		for i := 0; i < len(basicElements); i++ {
+			base = append(base, basicElements[i])
 		}
+		return base, combinationsChecked
 	}
 
 	return base, combinationsChecked
