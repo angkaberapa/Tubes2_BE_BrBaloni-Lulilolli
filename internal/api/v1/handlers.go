@@ -103,7 +103,7 @@ func SearchHandler(c *gin.Context) {
 		"target":       target,
 		"nodes":        nodes,
 		"edges":        edges,
-		"duration":     endTime.Sub(startTime).String(),
+		"duration":     fmt.Sprintf("%.2f ms", endTime.Sub(startTime).Seconds()*1000),
 		"totalNodes":   nodeCount,
 		"message":      fmt.Sprintf("Graph berhasil dibuat untuk %s", target),
 		"totalRecipes": totalRecipe,
