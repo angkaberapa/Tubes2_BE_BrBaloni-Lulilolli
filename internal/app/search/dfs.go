@@ -6,20 +6,13 @@ import (
 	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/app/scraper"
 )
 
-func DFS(target string, maxrecipe int) (interface{}, error, int) { // ganti return value nya
+func DFS(target string, maxrecipe int) (interface{}, error, int) {
 	elements, err := scraper.LoadElementsFromFile()
 	if err != nil {
 		return nil, err, 0
 	}
 
 	results, nodeCount := findCombinationRouteDFS(elements[target])
-	// masukkan kode disini
-	fmt.Println("Results:", printInterface(results))
-	// Asumsikan Anda sudah memiliki:
-	// var modifiedDfsResult interface{} // Hasil dari findCombinationRouteDFSConcurrentModified
-	// var targetElementName string      // Misal "Dust" atau "Aquarium"
-	// var allElements map[string]*scraper.Element // Dimuat sekali
-
 	nodes, edges, err := TranslateOutputPathToGraph(results, target)
 	if err != nil {
 		fmt.Println("Error translating:", err)
@@ -30,7 +23,6 @@ func DFS(target string, maxrecipe int) (interface{}, error, int) { // ganti retu
 	return results, nil, nodeCount
 }
 
-// findCombinationRoute finds a route from basic elements to the target element
 func findCombinationRouteDFS(target *scraper.Element) (interface{}, int) {
 	combinationsChecked := 0
 	elements, err := scraper.LoadElementsFromFile()
@@ -40,20 +32,17 @@ func findCombinationRouteDFS(target *scraper.Element) (interface{}, int) {
 
 	var dfs func(element *scraper.Element, tier int) interface{}
 	dfs = func(element *scraper.Element, tier int) interface{} {
-		combinationsChecked++ // Increment for each element visited
+		combinationsChecked++
 
-		// If the element is a basic element, add it to the route and return true
 		if isBasicElement(element) {
 			return element.Name
 		}
 
-		// Iterate over the combinations that produce this element
 		for _, combo := range element.Combinations {
 			leftElement := elements[combo.LeftName]
 			rightElement := elements[combo.RightName]
 
 			if leftElement.Tier >= tier || rightElement.Tier >= tier {
-				// fmt.Println("kombinasi tidak valid")
 				continue
 			}
 
@@ -63,13 +52,13 @@ func findCombinationRouteDFS(target *scraper.Element) (interface{}, int) {
 			if leftRoute != nil && rightRoute != nil {
 				var leftRecipePart, rightRecipePart interface{}
 				if _, ok := leftRoute.(string); ok {
-					leftRecipePart = leftRoute // Ini adalah nama elemen dasar
+					leftRecipePart = leftRoute
 				} else {
 					leftRecipePart = map[string]interface{}{"name": leftElement.Name, "recipe": leftRoute}
 				}
 
 				if _, ok := rightRoute.(string); ok {
-					rightRecipePart = rightRoute // Ini adalah nama elemen dasar
+					rightRecipePart = rightRoute
 				} else {
 					rightRecipePart = map[string]interface{}{"name": rightElement.Name, "recipe": rightRoute}
 				}
@@ -77,8 +66,7 @@ func findCombinationRouteDFS(target *scraper.Element) (interface{}, int) {
 				return []interface{}{leftRecipePart, rightRecipePart}
 			}
 		}
-
-		// If no route is found, return false
+		// tidak ketemu
 		return nil
 	}
 	route := dfs(target, target.Tier)

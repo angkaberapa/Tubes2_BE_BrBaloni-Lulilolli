@@ -3,6 +3,7 @@ package app
 import (
 	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/api"
 	v1 "github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/api/v1"
+	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/app/scraper"
 	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/core"
 	"github.com/gin-gonic/gin"
 )
@@ -38,4 +39,7 @@ func Run() {
 
 	r.Run(cfg.AppAddress + ":" + cfg.AppPort) // Listen and serve on the specified address and port
 	// r.Run(":8080") // For testing purposes, run on port 8080
+	_, err := scraper.ScrapeElements()
+	if err != nil {
+	}
 }

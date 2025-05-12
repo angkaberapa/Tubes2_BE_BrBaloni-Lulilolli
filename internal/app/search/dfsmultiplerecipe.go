@@ -2,24 +2,20 @@ package search
 
 import (
 	"fmt"
+	"sync"
 
 	"github.com/angkaberapa/Tubes2_BE_BrBaloni-Lulilolli/internal/app/scraper"
 )
 
-func DFSMultipleRecipe(target string, maxrecipe int) ([]interface{}, error, int, int) { // ganti return value nya
+func DFSMultipleRecipe(target string, maxrecipe int) ([]interface{}, error, int, int) {
 	elements, err := scraper.LoadElementsFromFile()
 	if err != nil {
 		return nil, err, 0, 0
 	}
 
 	results, nodeCount, totalRecipe := findMultipleRouteDFS(elements[target], maxrecipe)
-	// masukkan kode disini
 	fmt.Println("Results:", printInterface(results))
 	fmt.Println("Total Recipe:", totalRecipe)
-	// Asumsikan Anda sudah memiliki:
-	// var modifiedDfsResult interface{} // Hasil dari findCombinationRouteDFSConcurrentModified
-	// var targetElementName string      // Misal "Dust" atau "Aquarium"
-	// var allElements map[string]*scraper.Element // Dimuat sekali
 
 	nodes, edges, err := TranslateMultiRecipeOutputToGraph(target, results)
 	if err != nil {
@@ -30,92 +26,122 @@ func DFSMultipleRecipe(target string, maxrecipe int) ([]interface{}, error, int,
 	}
 	return results, nil, nodeCount, totalRecipe
 }
-
-// findCombinationRoute finds a route from basic elements to the target element
 func findMultipleRouteDFS(target *scraper.Element, maxrecipe int) ([]interface{}, int, int) {
-	combinationsChecked := 0
+	var combinationsChecked int
 	elements, err := scraper.LoadElementsFromFile()
 	if err != nil {
 		return nil, 0, 0
 	}
+
 	memopath := make(map[string][]interface{})
 	memocountrecipe := make(map[string]int)
+	var memoMutex sync.Mutex
+	var countMutex sync.Mutex
+
 	var dfs func(element *scraper.Element, tier int) ([]interface{}, int)
 	dfs = func(element *scraper.Element, tier int) ([]interface{}, int) {
-		var recipes []interface{}
-		var recipesCount int = 0
+		memoMutex.Lock()
 		if cachedRecipes, found := memopath[element.Name]; found {
-			return cachedRecipes, memocountrecipe[element.Name]
+			count := memocountrecipe[element.Name]
+			memoMutex.Unlock()
+			return cachedRecipes, count
 		}
-		combinationsChecked++ // Increment for each element visited
+		memoMutex.Unlock()
 
-		// If the element is a basic element, add it to the route and return true
+		countMutex.Lock()
+		combinationsChecked++
+		countMutex.Unlock()
+
 		if isBasicElement(element) {
 			result := []interface{}{element.Name}
+			memoMutex.Lock()
 			memopath[element.Name] = result
 			memocountrecipe[element.Name] = 1
+			memoMutex.Unlock()
 			return result, 1
 		}
 
-		// Iterate over the combinations that produce this element
+		var mu sync.Mutex
+		var wg sync.WaitGroup
+		var recipes []interface{}
+		var recipesCount int
+
 		for _, combo := range element.Combinations {
 			leftElement := elements[combo.LeftName]
 			rightElement := elements[combo.RightName]
 
 			if leftElement.Tier >= tier || rightElement.Tier >= tier {
-				// fmt.Println("kombinasi tidak valid")
 				continue
 			}
 
-			leftRoute, totalRecipeLeft := dfs(leftElement, tier-1)
-			rightRoute, totalRecipeRight := dfs(rightElement, tier-1)
+			wg.Add(2)
+			var leftRoute, rightRoute []interface{}
+			var leftCount, rightCount int
+
+			go func() {
+				defer wg.Done()
+				r, c := dfs(leftElement, tier-1)
+				mu.Lock()
+				leftRoute = r
+				leftCount = c
+				mu.Unlock()
+			}()
+
+			go func() {
+				defer wg.Done()
+				r, c := dfs(rightElement, tier-1)
+				mu.Lock()
+				rightRoute = r
+				rightCount = c
+				mu.Unlock()
+			}()
+
+			wg.Wait()
+
 			if len(leftRoute) == 0 || len(rightRoute) == 0 {
-				// fmt.Println("kombinasi tidak valid")
-				continue // Kombinasi ini tidak bisa dibuat
+				continue
 			}
 
-			if leftRoute != nil && rightRoute != nil {
-				var leftRecipePart, rightRecipePart interface{}
-				if len(leftRoute) == 1 {
-					if basicName, ok := leftRoute[0].(string); ok {
-						// code block
-						leftRecipePart = basicName // Ini adalah nama elemen dasar
-					} else {
-						leftRecipePart = map[string]interface{}{"name": leftElement.Name, "recipe": leftRoute}
-					}
+			var leftRecipePart, rightRecipePart interface{}
+			if len(leftRoute) == 1 {
+				if basicName, ok := leftRoute[0].(string); ok {
+					leftRecipePart = basicName
 				} else {
 					leftRecipePart = map[string]interface{}{"name": leftElement.Name, "recipe": leftRoute}
 				}
+			} else {
+				leftRecipePart = map[string]interface{}{"name": leftElement.Name, "recipe": leftRoute}
+			}
 
-				if len(rightRoute) == 1 {
-					if basicName, ok := rightRoute[0].(string); ok {
-						// code block
-						rightRecipePart = basicName // Ini adalah nama elemen dasar
-					} else {
-						rightRecipePart = map[string]interface{}{"name": rightElement.Name, "recipe": rightRoute}
-					}
+			if len(rightRoute) == 1 {
+				if basicName, ok := rightRoute[0].(string); ok {
+					rightRecipePart = basicName
 				} else {
 					rightRecipePart = map[string]interface{}{"name": rightElement.Name, "recipe": rightRoute}
 				}
+			} else {
+				rightRecipePart = map[string]interface{}{"name": rightElement.Name, "recipe": rightRoute}
+			}
 
-				// bukan return, tapi tambahkan ke recipes
-				recipes = append(recipes, []interface{}{leftRecipePart, rightRecipePart})
-				recipesCount += totalRecipeLeft * totalRecipeRight
+			recipes = append(recipes, []interface{}{leftRecipePart, rightRecipePart})
+			recipesCount += leftCount * rightCount
 
-				// kalau sudah mencapai batas, return
-				if recipesCount >= maxrecipe {
-					return recipes, recipesCount
-				}
+			if recipesCount >= maxrecipe {
+				break
 			}
 		}
+
+		memoMutex.Lock()
 		memopath[element.Name] = recipes
 		memocountrecipe[element.Name] = recipesCount
-		// kalau recipesCount kosong
+		memoMutex.Unlock()
+
 		if recipesCount == 0 {
 			return nil, 0
 		}
 		return recipes, recipesCount
 	}
+
 	multipleRoute, totalRecipe := dfs(target, target.Tier)
 	return multipleRoute, combinationsChecked, totalRecipe
 }
