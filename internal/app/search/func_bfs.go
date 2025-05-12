@@ -59,8 +59,8 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 		currentCheck := checker[0]
 		checker = checker[1:]
 
+		addToCheck := []string{}
 		for i := 0; i < len(currentCheck); i++ {
-			addToCheck := []string{}
 			if !isBasicElementByName(currentCheck[i]) {
 				combinationsChecked += 2
 
@@ -76,13 +76,38 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 						addToCheck = append(addToCheck, currentElement.Combinations[i].LeftName)
 						addToCheck = append(addToCheck, currentElement.Combinations[i].RightName)
 						toAdd := []string{currentElement.Name, currentElement.Combinations[i].LeftName, currentElement.Combinations[i].RightName}
-						base = append(base, toAdd)
+
+						toBeInserted := true
+						for j := 0; j < len(base); j++ {
+							if toAdd[0] == base[j][0] {
+								if (toAdd[1] == base[j][1] && toAdd[2] == base[j][2]) {
+									toBeInserted = false
+								}
+							}
+						}
+
+						if (toBeInserted) {
+							base = append(base, toAdd)
+						}
 					}
 				}
+			} else {
+				toBeInserted := true
+				for j := 0; j < len(addToCheck); j++ {
+					if addToCheck[j] == currentCheck[i] {
+						toBeInserted = false
+						break
+					}
+				}
+
+				if (toBeInserted) {
+					addToCheck = append(addToCheck, currentCheck[i])
+				}
 			}
-			if len(addToCheck) > 0 {
-				checker = append(checker, addToCheck)
-			}
+		}
+		
+		if len(addToCheck) > 0 {
+			checker = append(checker, addToCheck)
 		}
 
 		for i := 0; i < len(checker); i++ {
@@ -92,6 +117,7 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 				break
 			}
 		}
+
 	}
 	if bfsFound {
 		basicElements := [][]string{[]string{"Fire", "-", "-"}, []string{"Water", "-", "-"}, []string{"Earth", "-", "-"}, []string{"Air", "-", "-"}}
@@ -164,7 +190,7 @@ func expandNode(graph map[string][][]string, name string, parentID int, ID *int)
 	nodesToAdd = append(nodesToAdd, GraphNode{ID: *ID, Label: name})
 	edgesToAdd = append(edgesToAdd, GraphEdge{From: parentID, To: *ID})
 
-	fmt.Println("toExpand:", name)
+	// fmt.Println("toExpand:", name)
 	if !isBasicElementByName(name) {
 		edges := graph[name]
 		parentID = *ID
@@ -197,8 +223,8 @@ func expandNode(graph map[string][][]string, name string, parentID int, ID *int)
 		}
 	}
 
-	fmt.Println("nodesToAdd", nodesToAdd)
-	fmt.Println("edgesToAdd", edgesToAdd)
+	// fmt.Println("nodesToAdd", nodesToAdd)
+	// fmt.Println("edgesToAdd", edgesToAdd)
 	return nodesToAdd, edgesToAdd
 }
 
