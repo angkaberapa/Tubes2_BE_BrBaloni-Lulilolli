@@ -40,6 +40,9 @@ func SearchHandler(c *gin.Context) {
 	var nodes []search.GraphNode
 	var edges []search.GraphEdge
 	var totalRecipe int
+	if maxrecipe == 1 {
+		totalRecipe = 1
+	}
 
 	startTime := time.Now()
 	switch algo {
@@ -83,7 +86,11 @@ func SearchHandler(c *gin.Context) {
 			}
 		}
 	case "BFS":
-		// to do
+		nodes, edges, nodeCount, err = search.BFS(target, maxrecipe)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menjalankan BFS", "details": err.Error()})
+			return
+		}
 	}
 
 	if err != nil {
