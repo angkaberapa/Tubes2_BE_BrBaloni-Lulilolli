@@ -77,16 +77,16 @@ func SearchHandler(c *gin.Context) {
 				return
 			}
 		}
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		} else {
-			fmt.Println("Nodes:", nodes)
-			fmt.Println("Edges:", edges)
-		}
+		// if err != nil {
+		// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		// } else {
+		// 	fmt.Println("Nodes:", nodes)
+		// 	fmt.Println("Edges:", edges)
+		// }
 
-	// case "BFS":
-	// 	result, err, nodeCount = search.BFS(target, maxrecipe)
-	// }
+		// case "BFS":
+		// 	result, err, nodeCount = search.BFS(target, maxrecipe)
+	}
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
