@@ -12,8 +12,8 @@ func RegisterRoutes(r *gin.Engine, handlers *api.Handlers, appCtx *core.AppConte
 	{
 		v1.GET("/scrape", ScrapeHandler)
 		v1.GET("/search", SearchHandler)
-		v1.GET("/dfs", DFSHandler)
-		v1.GET("/dfs-concurrent", DFSMultipleRecipeHandler)
+		// v1.GET("/dfs", DFSHandler)
+		// v1.GET("/dfs-concurrent", DFSMultipleRecipeHandler)
 	}
 	// authGroup := v1.Group("/auth")
 	// {
