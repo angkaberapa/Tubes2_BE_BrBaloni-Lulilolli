@@ -80,13 +80,13 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 						toBeInserted := true
 						for j := 0; j < len(base); j++ {
 							if toAdd[0] == base[j][0] {
-								if (toAdd[1] == base[j][1] && toAdd[2] == base[j][2]) {
+								if toAdd[1] == base[j][1] && toAdd[2] == base[j][2] {
 									toBeInserted = false
 								}
 							}
 						}
 
-						if (toBeInserted) {
+						if toBeInserted {
 							base = append(base, toAdd)
 						}
 					}
@@ -100,12 +100,12 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 					}
 				}
 
-				if (toBeInserted) {
+				if toBeInserted {
 					addToCheck = append(addToCheck, currentCheck[i])
 				}
 			}
 		}
-		
+
 		if len(addToCheck) > 0 {
 			checker = append(checker, addToCheck)
 		}
@@ -188,7 +188,7 @@ func expandNode(graph map[string][][]string, name string, parentID int, ID *int)
 
 	(*ID)++
 	nodesToAdd = append(nodesToAdd, GraphNode{ID: *ID, Label: name})
-	edgesToAdd = append(edgesToAdd, GraphEdge{From: parentID, To: *ID})
+	edgesToAdd = append(edgesToAdd, GraphEdge{From: *ID, To: parentID})
 
 	// fmt.Println("toExpand:", name)
 	if !isBasicElementByName(name) {
@@ -208,7 +208,7 @@ func expandNode(graph map[string][][]string, name string, parentID int, ID *int)
 			for i := 0; i < len(edges); i++ {
 				(*ID)++
 				nodesToAdd = append(nodesToAdd, GraphNode{ID: *ID, Label: "+"})
-				edgesToAdd = append(edgesToAdd, GraphEdge{From: parentID, To: *ID})
+				edgesToAdd = append(edgesToAdd, GraphEdge{From: *ID, To: parentID})
 				plusID := *ID
 				for j := 0; j < len(edges[i]); j++ {
 					nodesToAddRecursive, edgesToAddRecursive := expandNode(graph, edges[i][j], plusID, ID)
