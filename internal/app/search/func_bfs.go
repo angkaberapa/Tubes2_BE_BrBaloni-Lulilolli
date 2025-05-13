@@ -51,10 +51,24 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 	for i := 0; i < len(checker); i++ {
 		if isAllBasicElement(checker[i]) {
 			bfsFound = true
-			break
+			basicElements := [][]string{[]string{"Fire", "-", "-"}, []string{"Water", "-", "-"}, []string{"Earth", "-", "-"}, []string{"Air", "-", "-"}}
+			for i := 0; i < len(basicElements); i++ {
+				base = append(base, basicElements[i])
+			}
+			fixList, existsList, counter := createFixList(base)
+			fmt.Println("fixList", fixList)
+			m := createMap(fixList, existsList)
+			mapp := limitRecipe(counter, m, target, numberOfRecipe)
+
+			if (mapp != nil) {
+				nodes, edges := createBFSNode(mapp, existsList)
+				return nodes, edges, combinationsChecked
+			} else {
+				bfsFound = false
+			}
 		}
 	}
-
+	
 	fmt.Println("checker", checker)
 	for !bfsFound {
 		currentCheck := checker[0]
@@ -118,7 +132,7 @@ func findCombinationRouteBFS(elements map[string]*scraper.Element, target string
 			}
 		}
 
-		fmt.Println("checker", checker)
+		fmt.Println("checker", checker, "bfsFound", bfsFound)
 		if bfsFound {
 			basicElements := [][]string{[]string{"Fire", "-", "-"}, []string{"Water", "-", "-"}, []string{"Earth", "-", "-"}, []string{"Air", "-", "-"}}
 			for i := 0; i < len(basicElements); i++ {
@@ -218,7 +232,7 @@ func expandNode(graph map[string][][]string, name string, parentID int, ID *int)
 
 	(*ID)++
 	nodesToAdd = append(nodesToAdd, GraphNode{ID: *ID, Label: name})
-	edgesToAdd = append(edgesToAdd, GraphEdge{From: parentID, To: *ID})
+	edgesToAdd = append(edgesToAdd, GraphEdge{To: parentID, From: *ID})
 
 	// fmt.Println("toExpand:", name)
 	if !isBasicElementByName(name) {
@@ -238,7 +252,7 @@ func expandNode(graph map[string][][]string, name string, parentID int, ID *int)
 			for i := 0; i < len(edges); i++ {
 				(*ID)++
 				nodesToAdd = append(nodesToAdd, GraphNode{ID: *ID, Label: "+"})
-				edgesToAdd = append(edgesToAdd, GraphEdge{From: parentID, To: *ID})
+				edgesToAdd = append(edgesToAdd, GraphEdge{To: parentID, From: *ID})
 				plusID := *ID
 				for j := 0; j < len(edges[i]); j++ {
 					nodesToAddRecursive, edgesToAddRecursive := expandNode(graph, edges[i][j], plusID, ID)
