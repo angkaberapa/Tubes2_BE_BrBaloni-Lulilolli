@@ -29,7 +29,7 @@ func isAllBasicElement(elements []string) bool {
 func findCombinationRouteBFS(elements map[string]*scraper.Element, target string, numberOfRecipe int) ([]GraphNode, []GraphEdge, int) {
 	targetElement := stringToElement(elements, target)
 	if isBasicElementByName(targetElement.Name) {
-		return []GraphNode{GraphNode{ID: 1, Label: targetElement.Name}}, nil, 1
+		return []GraphNode{GraphNode{ID: 1, Label: targetElement.Name}, GraphNode{ID: 2, Label: targetElement.Name}}, []GraphEdge{GraphEdge{To: 1, From: 2}}, 1
 	}
 
 	combinationsNumber := len(targetElement.Combinations)
@@ -354,7 +354,7 @@ func BFS(target string, maxrecipe int) ([]GraphNode, []GraphEdge, int, error) {
 		return nil, nil, -1, err
 	}
 
-	nodes, edges, nodeCount := findCombinationRouteBFS(elements, target, 5)
+	nodes, edges, nodeCount := findCombinationRouteBFS(elements, target, maxrecipe)
 	// masukkan kode disini
 	if nodes == nil {
 		return nil, nil, nodeCount, fmt.Errorf("no valid combination found")
