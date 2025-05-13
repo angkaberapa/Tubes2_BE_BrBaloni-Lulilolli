@@ -30,6 +30,9 @@ func Run() {
 		// DBPool: dbPool,
 	}
 
+	_, err := scraper.ScrapeElements()
+	if err != nil {
+	}
 	handlers := api.InitHandlers(&appCtx)
 
 	r := gin.Default()
@@ -39,7 +42,4 @@ func Run() {
 
 	r.Run(cfg.AppAddress + ":" + cfg.AppPort) // Listen and serve on the specified address and port
 	// r.Run(":8080") // For testing purposes, run on port 8080
-	_, err := scraper.ScrapeElements()
-	if err != nil {
-	}
 }
