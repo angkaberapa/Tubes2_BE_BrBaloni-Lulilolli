@@ -1,8 +1,10 @@
 package v1
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -18,6 +20,24 @@ func ScrapeHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, elements)
+}
+
+func ImageListHandler(c *gin.Context) {
+	file, err := os.Open("data/element_images.json")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuka file element_images.json"})
+		return
+	}
+	defer file.Close()
+
+	var images []scraper.ElementImage
+	err = json.NewDecoder(file).Decode(&images)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membaca isi JSON"})
+		return
+	}
+
+	c.JSON(http.StatusOK, images)
 }
 
 func SearchHandler(c *gin.Context) {

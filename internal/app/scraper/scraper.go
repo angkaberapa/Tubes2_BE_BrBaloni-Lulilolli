@@ -24,6 +24,11 @@ type Combination struct {
 	RightName  string
 }
 
+type ElementImage struct {
+	Name  string `json:"name"`
+	Image string `json:"image"`
+}
+
 func ScrapeElements() (map[string]*Element, error) {
 	url := "https://little-alchemy.fandom.com/wiki/Elements_(Little_Alchemy_2)"
 
@@ -48,6 +53,7 @@ func ScrapeElements() (map[string]*Element, error) {
 	fmt.Println("📖 Parsing HTML...")
 
 	var elementsMapByName = map[string]*Element{}
+	var elementImages []ElementImage
 	var totalCombinations int = 0
 
 	// Temukan semua nama elemen dulu (biar enak validasi kombinasi yang ada elemen Myths and Monsters)
@@ -63,6 +69,15 @@ func ScrapeElements() (map[string]*Element, error) {
 			return
 		}
 		elementsName = append(elementsName, resultName)
+
+		imgTag := cells.Eq(0).Find("img")
+		imgSrc, exists := imgTag.Attr("data-src")
+		if exists && resultName != "" {
+			elementImages = append(elementImages, ElementImage{
+				Name:  resultName,
+				Image: imgSrc,
+			})
+		}
 	})
 
 	// baru deh kita ambil semua kombinasi dari elemen yang ada di tabel
@@ -165,6 +180,19 @@ func ScrapeElements() (map[string]*Element, error) {
 				log.Printf("⚠️  Gagal menulis data ke file JSON: %v\n", err)
 			} else {
 				fmt.Println("💾 Data berhasil disimpan ke data/elements.json")
+			}
+		}
+
+		imgFile, err := os.Create("data/element_images.json")
+		if err != nil {
+			log.Printf("⚠️  Gagal membuat file JSON untuk gambar: %v\n", err)
+		} else {
+			defer imgFile.Close()
+			err := json.NewEncoder(imgFile).Encode(elementImages)
+			if err != nil {
+				log.Printf("⚠️  Gagal menulis data ke element_images.json: %v\n", err)
+			} else {
+				fmt.Println("🖼️  Data gambar berhasil disimpan ke data/element_images.json")
 			}
 		}
 	}
